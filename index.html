@@ -37,6 +37,9 @@
 <div class="color-note full">
 <span class="color-dot" id="colorDot"></span><span id="ledHint"></span>
 </div>
+<label class="field"><span data-i18n="sourceMode">Fuente de alimentación</span><select id="sourceMode"><option value="battery" data-i18n="sourceBattery">Usar batería</option><option value="external" data-i18n="sourceExternal">Fuente externa</option></select></label>
+<label class="field"><span data-i18n="sourceVoltage">Voltaje de la fuente</span><span class="unit">V</span><input id="sourceVoltage" type="number" min="0.01" step="0.01" value="4.2" readonly aria-describedby="sourceHint"/></label>
+<p class="helper full" id="sourceHint"></p>
 <label class="field"><span data-i18n="vf">Vf por LED</span> <span class="unit">V</span><input id="vf" inputmode="decimal" min="0.01" step="0.01" type="number" value="1.8"/></label>
 <label class="field"><span data-i18n="targetCurrent">Corriente objetivo</span> <span class="unit">mA</span><input id="targetCurrent" inputmode="decimal" min="0.01" step="0.1" type="number" value="11"/></label>
 <label class="field"><span data-i18n="ledCount">Cantidad de LEDs</span><input id="ledCount" inputmode="numeric" max="1000" min="1" step="1" type="number" value="2"/></label>

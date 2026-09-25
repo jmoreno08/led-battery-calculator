@@ -21,6 +21,8 @@ Los enlaces usan rutas relativas (`./`), por lo que funcionan bajo un subdirecto
 
 ## Modelo y límites
 
+- El panel LED muestra el voltaje de la fuente. «Usar batería» lo sincroniza con la tensión máxima del pack; «Fuente externa» permite introducir un voltaje fijo independiente y calcula la resistencia con ese valor. En este modo no se estima autonomía, porque no se modela la conexión entre batería y fuente externa.
+
 - En paralelo cada LED tiene una resistencia independiente: `R = (Vpack,máx − Vf) / Iobjetivo`. En serie hay una resistencia para la cadena: `R = (Vpack,máx − N·Vf) / Iobjetivo`. Se elige el E24 superior.
 - A tensión nominal: `I = (Vpack,nom − Vf,cadena) / R`. En paralelo se multiplica por el número de ramas.
 - Capacidad del pack: las celdas en serie suman tensión; en paralelo suman capacidad. `h ≈ capacidad_pack × porcentaje_aprovechable / corriente_total_nominal`. `días ≈ h / horas_de_uso_diarias`.
@@ -29,3 +31,5 @@ Los enlaces usan rutas relativas (`./`), por lo que funcionan bajo un subdirecto
 - Para baterías de litio, usa protección y carga apropiadas según la celda. No conectes celdas en paralelo de diferentes modelos, capacidades o niveles de carga.
 
 Prueba rápida: dos LEDs rojos de Vf 1,8 V, 11 mA objetivo, en paralelo, y una LiPo de 3,7 V nominal / 4,2 V máxima: se recomiendan **220 Ω por LED**, con aproximadamente **17,27 mA** en total a tensión nominal.
+
+Pruebas del cálculo: `node --test app.test.js`.

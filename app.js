@@ -1,4 +1,8 @@
 const STATIC_TEXT = {
+  "sourceMode": "Power source",
+  "sourceBattery": "Use battery",
+  "sourceExternal": "External supply",
+  "sourceVoltage": "Supply voltage",
   "pageTitle": "LED + Battery Calculator",
   "pageIntro": "Calculate resistance, total current, and runtime for your LEDs and battery setup.",
   "ledTitle": "LED and resistor",
@@ -111,6 +115,8 @@ function nextE24(value){
 }
 function calculate(x){
   const n=x.ledCount,b=x.batteryCount;
+  const external=x.sourceMode==='external';
+  if(external && (!Number.isFinite(x.sourceVoltage)||x.sourceVoltage<=0))return {error:'invalid'};
   if(![x.vf,x.targetCurrent,x.batteryNominal,x.batteryMax,x.capacity,x.hoursPerDay,x.usablePercent].every(Number.isFinite)
     || x.vf<=0||x.targetCurrent<=0||x.batteryNominal<=0||x.batteryMax<x.batteryNominal||x.capacity<=0
     || !Number.isInteger(n)||n<1||n>1000||!Number.isInteger(b)||b<1||b>100
@@ -122,22 +128,24 @@ function calculate(x){
   const packMax=x.batteryMax*(x.batteryConnection==='series'?b:1);
   const packCapacity=x.capacity*(x.batteryConnection==='parallel'?b:1);
   const ledDrop=x.vf*(x.ledConnection==='series'?n:1);
-  const common={packNominal,packMax,packCapacity,ledDrop};
-  if(packMax<=ledDrop) return {...common,error:'insufficient'};
-  if(packNominal<=ledDrop) return {...common,error:'noMargin'};
-  const idealResistance=(packMax-ledDrop)/(x.targetCurrent/1000);
+  const supplyMax=external?x.sourceVoltage:packMax;
+  const supplyNominal=external?x.sourceVoltage:packNominal;
+  const common={packNominal,packMax,packCapacity,ledDrop,supplyMax,supplyNominal,external};
+  if(supplyMax<=ledDrop) return {...common,error:'insufficient'};
+  if(supplyNominal<=ledDrop) return {...common,error:'noMargin'};
+  const idealResistance=(supplyMax-ledDrop)/(x.targetCurrent/1000);
   const resistance=nextE24(idealResistance);
   if(!resistance)return {...common,error:'noE24'};
   const branchCount=x.ledConnection==='parallel'?n:1;
-  const nominalBranchCurrent=(packNominal-ledDrop)/resistance*1000;
-  const maxBranchCurrent=(packMax-ledDrop)/resistance*1000;
+  const nominalBranchCurrent=(supplyNominal-ledDrop)/resistance*1000;
+  const maxBranchCurrent=(supplyMax-ledDrop)/resistance*1000;
   const totalCurrent=nominalBranchCurrent*branchCount;
   const maxResistorPower=(maxBranchCurrent/1000)**2*resistance;
   const usableCapacity=packCapacity*x.usablePercent/100;
-  const runtimeHours=usableCapacity/totalCurrent;
+  const runtimeHours=external?null:usableCapacity/totalCurrent;
   return {...common,idealResistance,resistance,nominalBranchCurrent,maxBranchCurrent,totalCurrent,
     maxResistorPower,ledPower:x.vf*n*nominalBranchCurrent/1000,usableCapacity,runtimeHours,
-    runtimeDays:runtimeHours/x.hoursPerDay,branchCount,perCellCurrent:totalCurrent/(x.batteryConnection==='parallel'?b:1)};
+    runtimeDays:external?null:runtimeHours/x.hoursPerDay,branchCount,perCellCurrent:external?null:totalCurrent/(x.batteryConnection==='parallel'?b:1)};
 }
 if(typeof module!=='undefined') module.exports={calculate,nextE24};
 
@@ -148,8 +156,12 @@ if(typeof document!=='undefined'){
   for(const node of staticNodes)node.dataset.es=node.textContent;
   const MESSAGES={
     es:{title:'Calculadora LED + Batería',description:'Diseña circuitos LED con resistencia, baterías y autonomía aproximada.',
+      sourceBatteryHint:'Se usa la tensión máxima del pack para dimensionar la resistencia. Se actualiza al cambiar la batería.',
+      sourceExternalHint:'Introduce el voltaje de la fuente que alimenta los LEDs directamente.',
+      externalRuntime:'La autonomía no se estima con una fuente externa. Selecciona «Usar batería» para calcularla.',
+      externalExplain:(voltage,current)=>`Resistencia calculada con una fuente de ${voltage} V. Cada rama conduce aproximadamente ${current} mA con el valor E24 recomendado.`,
       invalid:'Revisa los valores: deben ser positivos, las cantidades enteras y el voltaje máximo no menor que el nominal.',
-      insufficient:'La tensión máxima del pack no supera la suma de Vf. Necesitas otra configuración o un convertidor.',
+      insufficient:'El voltaje de la fuente no supera la suma de Vf. Necesitas otra configuración o un convertidor.',
       noMargin:'El circuito podría encender recién cargado, pero a tensión nominal no queda margen para la resistencia. No se estima autonomía.',
       noE24:'No se encontró un valor E24 para esta resistencia.',
       parallel:'Una resistencia por LED',series:'Una resistencia para toda la cadena',
@@ -162,8 +174,12 @@ if(typeof document!=='undefined'){
       margin:'El margen de tensión nominal es inferior a 0,3 V. La corriente y el brillo caerán pronto al descargarse la batería; esta autonomía puede sobrestimar mucho la duración útil.',
       explain:(max,nom,current,capacity)=>`Se dimensiona con ${max} V (pack al máximo). A ${nom} V, cada rama conduce ≈ ${current} mA; la autonomía divide ${capacity} mAh aprovechables entre la corriente total. Al caer la tensión, también cae la luz.`},
     en:{title:'LED + Battery Calculator',description:'Design LED circuits with resistors, batteries, and approximate runtime.',
+      sourceBatteryHint:'Maximum pack voltage is used to size the resistor. It updates when you change the battery.',
+      sourceExternalHint:'Enter the voltage of the supply directly powering the LEDs.',
+      externalRuntime:'Battery runtime is not estimated with an external supply. Select “Use battery” to calculate it.',
+      externalExplain:(voltage,current)=>`Resistor sized for a ${voltage} V supply. Each branch draws approximately ${current} mA with the recommended E24 value.`,
       invalid:'Check the inputs: values must be positive, counts must be whole numbers, and maximum voltage must not be below nominal voltage.',
-      insufficient:'The maximum pack voltage does not exceed the combined LED forward voltage. Choose another setup or use a converter.',
+      insufficient:'The supply voltage does not exceed the combined LED forward voltage. Choose another setup or use a converter.',
       noMargin:'The LEDs may turn on with a fresh battery, but there is no resistor headroom at nominal voltage. Runtime cannot be estimated.',
       noE24:'No E24 resistor value was found for this configuration.',
       parallel:'One resistor per LED',series:'One resistor for the whole string',
@@ -186,6 +202,8 @@ if(typeof document!=='undefined'){
     document.title=MESSAGES[lang].title;
     document.querySelector('meta[name="description"]').content=MESSAGES[lang].description;
     for(const node of staticNodes)node.textContent=lang==='en'?STATIC_TEXT[node.dataset.i18n]??node.dataset.es:node.dataset.es;
+    const colorMarkers={white:'⚪',uv:'🟣',violet:'🟣',blue:'🔵',green:'🟢',yellow:'🟡',orange:'🟠',red:'🔴',infrared:'◉',custom:'◌'};
+    for(const option of $('ledColor').options)option.textContent=`${colorMarkers[option.value]} ${option.textContent}`;
     for(const button of document.querySelectorAll('.language-switch button'))button.setAttribute('aria-pressed',String(button.dataset.lang===lang));
     renderLedHint();update();
   }
@@ -209,6 +227,12 @@ if(typeof document!=='undefined'){
   }
   function update(){
     const x=Object.fromEntries(ids.map(id=>[id,['ledConnection','batteryConnection'].includes(id)?$(id).value:Number($(id).value)]));
+    x.sourceMode=$('sourceMode').value;
+    const external=x.sourceMode==='external';
+    $('sourceVoltage').readOnly=!external;
+    if(!external)$('sourceVoltage').value=Number((x.batteryMax*(x.batteryConnection==='series'?x.batteryCount:1)).toFixed(6));
+    x.sourceVoltage=Number($('sourceVoltage').value);
+    $('sourceHint').textContent=MESSAGES[lang][external?'sourceExternalHint':'sourceBatteryHint'];
     const r=calculate(x),status=$('status');
     const type=$('batteryType').value;
     $('resistanceCaption').textContent=MESSAGES[lang][x.ledConnection];
@@ -220,19 +244,21 @@ if(typeof document!=='undefined'){
     $('actualCurrent').textContent=`${formatted(r.totalCurrent,2)} mA`;
     $('resistorPower').textContent=r.maxResistorPower<1?`${formatted(r.maxResistorPower*1000,2)} mW`:`${formatted(r.maxResistorPower,2)} W`;
     $('ledPower').textContent=`${formatted(r.ledPower*1000,2)} mW`;
-    $('runtime').textContent=`${formatted(r.runtimeHours,1)} h`;
-    $('runtimeDays').textContent=MESSAGES[lang].days(formatted(r.runtimeDays,1),formatted(x.hoursPerDay,1));
+    $('runtime').textContent=external?'—':`${formatted(r.runtimeHours,1)} h`;
+    $('runtimeDays').textContent=external?MESSAGES[lang].externalRuntime:MESSAGES[lang].days(formatted(r.runtimeDays,1),formatted(x.hoursPerDay,1));
     const coin=BATTERIES[type]?.coin;
-    if(coin && r.perCellCurrent>=2){
+    if(!external && coin && r.perCellCurrent>=2){
       status.textContent=MESSAGES[lang].coin(formatted(r.perCellCurrent,1));
       status.className='status show';
-    }else if(r.packNominal-r.ledDrop<0.3){
+    }else if(!external && r.packNominal-r.ledDrop<0.3){
       status.textContent=MESSAGES[lang].margin;
       status.className='status show';
     }else{status.textContent='';status.className='status';}
-    $('explanation').textContent=MESSAGES[lang].explain(formatted(r.packMax,2),formatted(r.packNominal,2),formatted(r.nominalBranchCurrent,2),formatted(r.usableCapacity,0));
+    $('explanation').textContent=external?MESSAGES[lang].externalExplain(formatted(r.supplyMax,2),formatted(r.nominalBranchCurrent,2)):MESSAGES[lang].explain(formatted(r.packMax,2),formatted(r.packNominal,2),formatted(r.nominalBranchCurrent,2),formatted(r.usableCapacity,0));
   }
   ids.forEach(id=>$(id).addEventListener('input',update));
+  $('sourceMode').addEventListener('change',update);
+  $('sourceVoltage').addEventListener('input',update);
   $('ledColor').addEventListener('change',ledChange);
   $('batteryType').addEventListener('change',batteryChange);
   for(const button of document.querySelectorAll('.language-switch button'))button.addEventListener('click',()=>{
