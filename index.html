@@ -1,160 +1,86 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101b16">
-  <meta name="description" content="Diseña circuitos LED con resistencia, baterías y autonomía aproximada.">
-  <title>Lúmina · Calculadora LED y batería</title>
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./app.js" defer></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#f6f7f8" name="theme-color"/>
+<meta content="Diseña circuitos LED con resistencia, baterías y autonomía aproximada." name="description"/>
+<title>Calculadora LED + Batería</title>
+<link href="./styles.css" rel="stylesheet"/>
+<script defer="" src="./app.js"></script>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="topbar"><a class="brand" href="#inicio" aria-label="Lúmina, ir al inicio"><span class="brand-mark">✳</span><span>LÚMINA <small>LAB</small></span></a><div class="header-actions">
-<span class="top-label"><span data-i18n="topLabel">HERRAMIENTA DE DISEÑO ELECTRÓNICO</span> <span class="live-dot"></span></span><div class="language-switch" role="group" aria-label="Language / Idioma">
-<button type="button" data-lang="es" aria-pressed="true">ES</button><button type="button" data-lang="en" aria-pressed="false">EN</button>
+  <main class="wrap" id="inicio">
+    <header class="page-header">
+      <div><h1 data-i18n="pageTitle">Calculadora LED + Batería</h1>
+      <p class="sub" data-i18n="pageIntro">Calcula resistencia, consumo total y autonomía según cantidad de LEDs y tipo de batería.</p></div>
+      <div class="language-switch" role="group" aria-label="Language / Idioma">
+        <button type="button" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </header>
+    <div class="grid">
+      <section class="card" aria-labelledby="led-title">
+        <h2 id="led-title" data-i18n="ledTitle">LED y resistencia</h2>
+        <p class="hint" data-i18n="ledIntro">Selecciona color, corriente, cantidad y conexión.</p>
+        <div class="fields">
+<label class="field full"><span data-i18n="ledColor">Color del LED</span><select id="ledColor"><option data-i18n="white" value="white">Blanco</option>
+<option data-i18n="uv" value="uv">Ultravioleta</option>
+<option data-i18n="violet" value="violet">Violeta</option>
+<option data-i18n="blue" value="blue">Azul</option>
+<option data-i18n="green" value="green">Verde</option>
+<option data-i18n="yellow" value="yellow">Amarillo</option>
+<option data-i18n="orange" value="orange">Naranja</option>
+<option data-i18n="red" selected="" value="red">Rojo</option>
+<option data-i18n="infrared" value="infrared">Infrarrojo</option>
+<option data-i18n="custom" value="custom">Personalizado</option></select></label>
+<div class="color-note full">
+<span class="color-dot" id="colorDot"></span><span id="ledHint"></span>
 </div>
-</div></header>
-    <main id="inicio">
-      <section class="hero"><div class="eyebrow">
-<span class="eyebrow-line"></span> <span data-i18n="eyebrow">DISEÑA CON CLARIDAD</span> <span class="edition">/ 01</span>
+<label class="field"><span data-i18n="vf">Vf por LED</span> <span class="unit">V</span><input id="vf" inputmode="decimal" min="0.01" step="0.01" type="number" value="1.8"/></label>
+<label class="field"><span data-i18n="targetCurrent">Corriente objetivo</span> <span class="unit">mA</span><input id="targetCurrent" inputmode="decimal" min="0.01" step="0.1" type="number" value="11"/></label>
+<label class="field"><span data-i18n="ledCount">Cantidad de LEDs</span><input id="ledCount" inputmode="numeric" max="1000" min="1" step="1" type="number" value="2"/></label>
+<label class="field"><span data-i18n="connection">Conexión</span><select id="ledConnection"><option data-i18n="parallel" value="parallel">Paralelo</option>
+<option data-i18n="series" value="series">Serie</option></select></label>
 </div>
-<h1><span data-i18n="heroStart">Haz que cada</span> <em>LED</em><br><span data-i18n="heroEnd">cuente.</span></h1>
-<p data-i18n="heroText">Calcula resistencias, configura tus baterías y explora cuánto tiempo podría brillar tu circuito. Todo en un solo lugar.</p>
-<div class="hero-actions">
-<a href="#calculadora" class="primary-link"><span data-i18n="cta">Empezar a calcular</span> <span>↗</span></a><span class="hero-note" data-i18n="heroNote">SIN REGISTRO · FUNCIONA SIN INTERNET</span>
-</div>
-<div class="hero-art" aria-hidden="true">
-<div class="orb orb-one"></div>
-<div class="orb orb-two"></div>
-<div class="orb orb-three"></div>
-<div class="orbit orbit-one"></div>
-<div class="orbit orbit-two"></div>
-<span class="art-plus">+</span><span class="art-label"><span data-i18n="artLabel">ENERGÍA</span><br><span data-i18n="artLabelEnd">EN EQUILIBRIO</span></span>
-</div></section>
-      <section id="calculadora" class="workspace" aria-labelledby="workspace-title"><div class="section-head">
-<div>
-<span class="section-index" data-i18n="labIndex">01 / EL LABORATORIO</span><h2 id="workspace-title"><span data-i18n="configure">Configura tu circuito</span><span class="accent">.</span>
-</h2>
-</div>
-<span class="section-side" data-i18n="instant">Los resultados se actualizan al instante ↓</span>
-</div>
-        <div class="grid">
-          <div class="inputs-column">
-            <section class="card"><div class="card-heading">
-<span class="step">01</span><div>
-<h3>LEDs</h3>
-<p data-i18n="ledIntro">Elige el tipo y cómo los conectarás.</p>
-</div>
-<span class="card-glyph">✦</span>
-</div>
-<div class="fields">
-              <label class="field full"><span data-i18n="ledColor">Color del LED</span><select id="ledColor"><option value="white" data-i18n="white">Blanco</option>
-<option value="uv" data-i18n="uv">Ultravioleta</option>
-<option value="violet" data-i18n="violet">Violeta</option>
-<option value="blue" data-i18n="blue">Azul</option>
-<option value="green" data-i18n="green">Verde</option>
-<option value="yellow" data-i18n="yellow">Amarillo</option>
-<option value="orange" data-i18n="orange">Naranja</option>
-<option value="red" selected data-i18n="red">Rojo</option>
-<option value="infrared" data-i18n="infrared">Infrarrojo</option>
-<option value="custom" data-i18n="custom">Personalizado</option></select></label>
-              <div class="color-note full">
-<span id="colorDot" class="color-dot"></span><span id="ledHint"></span>
-</div>
-              <label class="field"><span data-i18n="vf">Vf por LED</span> <span class="unit">V</span><input id="vf" type="number" min="0.01" step="0.01" inputmode="decimal" value="1.8"></label>
-              <label class="field"><span data-i18n="targetCurrent">Corriente objetivo</span> <span class="unit">mA</span><input id="targetCurrent" type="number" min="0.01" step="0.1" inputmode="decimal" value="11"></label>
-              <label class="field"><span data-i18n="ledCount">Cantidad de LEDs</span><input id="ledCount" type="number" min="1" max="1000" step="1" inputmode="numeric" value="2"></label>
-              <label class="field"><span data-i18n="connection">Conexión</span><select id="ledConnection"><option value="parallel" data-i18n="parallel">Paralelo</option>
-<option value="series" data-i18n="series">Serie</option></select></label>
-            </div>
-<p class="helper" data-i18n="ledHelper">En paralelo, cada LED lleva su propia resistencia. En serie, la cadena completa lleva una resistencia.</p></section>
-            <section class="card"><div class="card-heading">
-<span class="step">02</span><div>
-<h3 data-i18n="battery">Batería</h3>
-<p data-i18n="batteryIntro">La tensión del pack alimenta directamente los LEDs.</p>
-</div>
-<span class="card-glyph">◈</span>
-</div>
-<div class="fields">
-              <label class="field full"><span data-i18n="cellType">Tipo de celda</span><select id="batteryType"><option value="cr2032">CR2032 · 3 V · 220 mAh</option>
+        <div class="result-grid" aria-live="polite"><div class="result"><span data-i18n="idealR">Resistencia calculada</span><strong id="idealResistance">—</strong></div><div class="result"><span data-i18n="e24">E24 recomendado</span><strong id="resistance">—</strong></div><div class="result"><span data-i18n="totalCurrent">Corriente nominal total</span><strong id="actualCurrent">—</strong></div><div class="result"><span data-i18n="resistorPower">Potencia máxima resistencia</span><strong id="resistorPower">—</strong></div><div class="result"><span data-i18n="ledPower">Potencia LED nominal</span><strong id="ledPower">—</strong></div></div>
+        <p class="helper" id="resistanceCaption">Una resistencia por LED</p>
+        <div id="status" class="status" role="status"></div>
+        <p class="info" id="explanation"></p>
+      </section>
+      <section class="card" aria-labelledby="battery-title">
+        <h2 id="battery-title" data-i18n="batteryTitle">Batería y autonomía</h2>
+        <p class="hint" data-i18n="batteryIntro">La tensión del pack alimenta directamente los LEDs.</p>
+        <div class="fields">
+<label class="field full"><span data-i18n="cellType">Tipo de celda</span><select id="batteryType"><option value="cr2032">CR2032 · 3 V · 220 mAh</option>
 <option value="cr2450">CR2450 · 3 V · 620 mAh</option>
 <option value="cr2477">CR2477 · 3 V · 1000 mAh</option>
-<option value="aaaa" data-i18n="batteryAaaa">AAAA alcalina · 1,5 V · 500 mAh</option>
-<option value="aaa" data-i18n="batteryAaa">AAA alcalina · 1,5 V · 1100 mAh</option>
-<option value="aa" data-i18n="batteryAa">AA alcalina · 1,5 V · 2500 mAh</option>
-<option value="lipo850" selected data-i18n="batteryLipo">LiPo · 3,7 V · 850 mAh</option>
-<option value="li18650" data-i18n="battery18650">18650 Li-ion · 3,7 V · 3000 mAh</option>
-<option value="custom" data-i18n="batteryCustom">Personalizada</option></select></label>
-              <label class="field"><span data-i18n="nominalV">Tensión nominal</span> <span class="unit">V</span><input id="batteryNominal" type="number" min="0.01" step="0.01" inputmode="decimal"></label>
-              <label class="field"><span data-i18n="maxV">Tensión máxima</span> <span class="unit">V</span><input id="batteryMax" type="number" min="0.01" step="0.01" inputmode="decimal"></label>
-              <label class="field"><span data-i18n="capacity">Capacidad por celda</span> <span class="unit">mAh</span><input id="capacity" type="number" min="1" step="1" inputmode="decimal"></label>
-              <label class="field"><span data-i18n="cellCount">Cantidad de celdas</span><input id="batteryCount" type="number" min="1" max="100" step="1" inputmode="numeric" value="1"></label>
-              <label class="field full"><span data-i18n="cellConnection">Conexión de celdas</span><select id="batteryConnection"><option value="series" data-i18n="seriesVoltage">Serie · suma tensión</option>
-<option value="parallel" data-i18n="parallelCapacity">Paralelo · suma capacidad</option></select></label>
-            </div></section>
-            <section class="card compact"><div class="card-heading">
-<span class="step">03</span><div>
-<h3 data-i18n="plannedUse">Uso previsto</h3>
-<p data-i18n="useIntro">Ajusta la estimación a tu aplicación.</p>
+<option data-i18n="batteryAaaa" value="aaaa">AAAA alcalina · 1,5 V · 500 mAh</option>
+<option data-i18n="batteryAaa" value="aaa">AAA alcalina · 1,5 V · 1100 mAh</option>
+<option data-i18n="batteryAa" value="aa">AA alcalina · 1,5 V · 2500 mAh</option>
+<option data-i18n="batteryLipo" selected="" value="lipo850">LiPo · 3,7 V · 850 mAh</option>
+<option data-i18n="battery18650" value="li18650">18650 Li-ion · 3,7 V · 3000 mAh</option>
+<option data-i18n="batteryCustom" value="custom">Personalizada</option></select></label>
+<label class="field"><span data-i18n="nominalV">Tensión nominal</span> <span class="unit">V</span><input id="batteryNominal" inputmode="decimal" min="0.01" step="0.01" type="number"/></label>
+<label class="field"><span data-i18n="maxV">Tensión máxima</span> <span class="unit">V</span><input id="batteryMax" inputmode="decimal" min="0.01" step="0.01" type="number"/></label>
+<label class="field"><span data-i18n="capacity">Capacidad por celda</span> <span class="unit">mAh</span><input id="capacity" inputmode="decimal" min="1" step="1" type="number"/></label>
+<label class="field"><span data-i18n="cellCount">Cantidad de celdas</span><input id="batteryCount" inputmode="numeric" max="100" min="1" step="1" type="number" value="1"/></label>
+<label class="field full"><span data-i18n="cellConnection">Conexión de celdas</span><select id="batteryConnection"><option data-i18n="seriesVoltage" value="series">Serie · suma tensión</option>
+<option data-i18n="parallelCapacity" value="parallel">Paralelo · suma capacidad</option></select></label>
 </div>
-<span class="card-glyph">◷</span>
-</div>
-<div class="fields">
-<label class="field"><span data-i18n="hoursDay">Horas encendido al día</span> <span class="unit">h</span><input id="hoursPerDay" type="number" min="0.01" max="24" step="0.5" inputmode="decimal" value="8"></label><label class="field"><span data-i18n="usableCapacity">Capacidad aprovechable</span> <span class="unit">%</span><input id="usablePercent" type="number" min="1" max="100" step="1" inputmode="numeric" value="80"></label>
-</div>
-<p class="helper" data-i18n="useHelper">El porcentaje lo defines tú. Consulta la curva de descarga de tu batería para afinarlo.</p></section>
-          </div>
-          <div class="results-column"><div class="results-sticky">
-<section class="result-panel" aria-live="polite"><div class="result-top">
-<span class="result-kicker"><span data-i18n="liveResult">RESULTADO EN VIVO</span> <span class="live-dot"></span></span><span class="result-icon">↗</span>
-</div>
-<h3><span data-i18n="yourCircuit">Tu circuito,</span><br><span data-i18n="inNumbers">en números</span><span class="accent">.</span>
-</h3>
-<div id="status" class="status"></div>
-<div class="result-main">
-<span class="metric-label" data-i18n="e24">RESISTENCIA COMERCIAL E24</span><div class="big-number" id="resistance">—</div>
-<span class="metric-caption" id="resistanceCaption" data-i18n="parallelResistor">Por LED en paralelo</span>
-</div>
-<div class="metrics">
-<div>
-<span data-i18n="idealR">Valor teórico</span><strong id="idealResistance">—</strong>
-</div>
-<div>
-<span data-i18n="totalCurrent">Corriente nominal total</span><strong id="actualCurrent">—</strong>
-</div>
-<div>
-<span data-i18n="resistorPower">Potencia máxima resistencia</span><strong id="resistorPower">—</strong>
-</div>
-<div>
-<span data-i18n="packV">Tensión del pack nominal / máx.</span><strong id="packVoltage">—</strong>
-</div>
-<div>
-<span data-i18n="packCapacity">Capacidad del pack</span><strong id="packCapacity">—</strong>
-</div>
-<div>
-<span data-i18n="ledPower">Potencia LED nominal</span><strong id="ledPower">—</strong>
-</div>
-</div>
-<div class="runtime">
-<span data-i18n="runtime">AUTONOMÍA ORIENTATIVA</span><div id="runtime" class="runtime-value">—</div>
-<p id="runtimeDays" data-i18n="validConfig">Introduce una configuración válida.</p>
-</div></section><div class="explain">
-<span>ⓘ</span><p id="explanation" data-i18n="explainInitial">La resistencia se dimensiona con la tensión máxima de la batería para limitar la corriente.</p>
-</div>
+        <div class="usage"><div class="fields">
+<label class="field"><span data-i18n="hoursDay">Horas encendido al día</span> <span class="unit">h</span><input id="hoursPerDay" inputmode="decimal" max="24" min="0.01" step="0.5" type="number" value="8"/></label><label class="field"><span data-i18n="usableCapacity">Capacidad aprovechable</span> <span class="unit">%</span><input id="usablePercent" inputmode="numeric" max="100" min="1" step="1" type="number" value="80"/></label>
 </div></div>
-        </div>
+        <p class="helper" data-i18n="useHelper">El porcentaje lo defines tú. Consulta la curva de descarga de tu batería para afinarlo.</p>
+        <div class="result-grid" aria-live="polite"><div class="result"><span data-i18n="runtime">Autonomía continua estimada</span><strong id="runtime">—</strong></div><div class="result"><span data-i18n="packV">Tensión del pack nominal / máx.</span><strong id="packVoltage">—</strong></div><div class="result"><span data-i18n="packCapacity">Capacidad del pack</span><strong id="packCapacity">—</strong></div></div>
+        <p class="info" id="runtimeDays" aria-live="polite"></p>
       </section>
-      <section class="bottom-info"><div>
-<span class="section-index" data-i18n="beforeBuild">02 / ANTES DE CONSTRUIR</span><h2><span data-i18n="goodEstimate">Una buena estimación</span><br><span data-i18n="starts">empieza con el</span> <em>datasheet.</em>
-</h2>
-</div>
-<div class="bottom-copy">
-<p data-i18n="bottomOne">Los valores de Vf y capacidad de la lista son ejemplos editables. La autonomía usa corriente calculada a tensión nominal y capacidad aprovechable elegida; la descarga real cambia con la química, temperatura, envejecimiento y carga.</p>
-<p data-i18n="bottomTwo">En pilas botón, una corriente alta puede reducir mucho la capacidad útil. Para convertidores, controladores de corriente o LEDs con consumo adicional, hace falta un modelo de potencia diferente.</p>
-</div></section>
-    </main><footer><span>✳ LÚMINA LAB</span><span data-i18n="footerTag">HECHO PARA IDEAS QUE BRILLAN</span><a href="#inicio" data-i18n="backTop">VOLVER ARRIBA ↑</a></footer>
-  </div>
+    </div>
+    <footer class="footer">
+      <p data-i18n="ledHelper">En paralelo, cada LED lleva su propia resistencia. En serie, la cadena completa lleva una resistencia.</p>
+      <p data-i18n="bottomOne">Los valores de Vf y capacidad de la lista son ejemplos editables. La autonomía usa corriente calculada a tensión nominal y capacidad aprovechable elegida; la descarga real cambia con la química, temperatura, envejecimiento y carga.</p>
+      <p data-i18n="bottomTwo">En pilas botón, una corriente alta puede reducir mucho la capacidad útil. Para convertidores, controladores de corriente o LEDs con consumo adicional, hace falta un modelo de potencia diferente.</p>
+    </footer>
+  </main>
 </body>
 </html>

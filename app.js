@@ -1,4 +1,8 @@
 const STATIC_TEXT = {
+  "pageTitle": "LED + Battery Calculator",
+  "pageIntro": "Calculate resistance, total current, and runtime for your LEDs and battery setup.",
+  "ledTitle": "LED and resistor",
+  "batteryTitle": "Battery and runtime",
   "topLabel": "ELECTRONICS DESIGN TOOL",
   "eyebrow": "DESIGN WITH CLARITY",
   "heroStart": "Make every",
@@ -11,7 +15,7 @@ const STATIC_TEXT = {
   "labIndex": "01 / THE LAB",
   "configure": "Configure your circuit",
   "instant": "Results update instantly ↓",
-  "ledIntro": "Choose the type and connection.",
+  "ledIntro": "Choose the color, current, number, and connection.",
   "ledColor": "LED color",
   "white": "White",
   "uv": "Ultraviolet",
@@ -48,7 +52,7 @@ const STATIC_TEXT = {
   "liveResult": "LIVE RESULT",
   "yourCircuit": "Your circuit,",
   "inNumbers": "by the numbers",
-  "e24": "STANDARD E24 RESISTOR",
+  "e24": "Recommended E24",
   "parallelResistor": "Per LED in parallel",
   "idealR": "Calculated value",
   "totalCurrent": "Total nominal current",
@@ -56,7 +60,7 @@ const STATIC_TEXT = {
   "packV": "Pack voltage nominal / max.",
   "packCapacity": "Pack capacity",
   "ledPower": "Nominal LED power",
-  "runtime": "APPROXIMATE RUNTIME",
+  "runtime": "Estimated continuous runtime",
   "validConfig": "Enter a valid configuration.",
   "explainInitial": "The resistor is sized using maximum battery voltage to limit current.",
   "beforeBuild": "02 / BEFORE YOU BUILD",
@@ -143,7 +147,7 @@ if(typeof document!=='undefined'){
   const staticNodes=[...document.querySelectorAll('[data-i18n]')];
   for(const node of staticNodes)node.dataset.es=node.textContent;
   const MESSAGES={
-    es:{title:'Lúmina · Calculadora LED y batería',description:'Diseña circuitos LED con resistencia, baterías y autonomía aproximada.',
+    es:{title:'Calculadora LED + Batería',description:'Diseña circuitos LED con resistencia, baterías y autonomía aproximada.',
       invalid:'Revisa los valores: deben ser positivos, las cantidades enteras y el voltaje máximo no menor que el nominal.',
       insufficient:'La tensión máxima del pack no supera la suma de Vf. Necesitas otra configuración o un convertidor.',
       noMargin:'El circuito podría encender recién cargado, pero a tensión nominal no queda margen para la resistencia. No se estima autonomía.',
@@ -157,7 +161,7 @@ if(typeof document!=='undefined'){
       coin:(current)=>`Pila botón: ${current} mA por celda es una carga exigente. La duración indicada puede sobrestimar mucho la real: consulta la curva de descarga del modelo específico.`,
       margin:'El margen de tensión nominal es inferior a 0,3 V. La corriente y el brillo caerán pronto al descargarse la batería; esta autonomía puede sobrestimar mucho la duración útil.',
       explain:(max,nom,current,capacity)=>`Se dimensiona con ${max} V (pack al máximo). A ${nom} V, cada rama conduce ≈ ${current} mA; la autonomía divide ${capacity} mAh aprovechables entre la corriente total. Al caer la tensión, también cae la luz.`},
-    en:{title:'Lúmina · LED and battery calculator',description:'Design LED circuits with resistors, batteries, and approximate runtime.',
+    en:{title:'LED + Battery Calculator',description:'Design LED circuits with resistors, batteries, and approximate runtime.',
       invalid:'Check the inputs: values must be positive, counts must be whole numbers, and maximum voltage must not be below nominal voltage.',
       insufficient:'The maximum pack voltage does not exceed the combined LED forward voltage. Choose another setup or use a converter.',
       noMargin:'The LEDs may turn on with a fresh battery, but there is no resistor headroom at nominal voltage. Runtime cannot be estimated.',
@@ -172,8 +176,8 @@ if(typeof document!=='undefined'){
       margin:'Nominal voltage headroom is below 0.3 V. Current and brightness will drop quickly as the battery discharges, so this runtime may be much too high.',
       explain:(max,nom,current,capacity)=>`The resistor is sized at ${max} V (maximum pack voltage). At ${nom} V, each branch draws ≈ ${current} mA; runtime divides ${capacity} mAh of usable capacity by total current. Brightness falls as voltage drops.`}
   };
-  let lang='es';
-  try{if(localStorage.getItem('lumina-language')==='en')lang='en';}catch{}
+  let lang='en';
+  try{if(localStorage.getItem('lumina-language')==='es')lang='es';}catch{}
   const formatted=(value,max=1)=>new Intl.NumberFormat(lang==='en'?'en-US':'es-CO',{maximumFractionDigits:max}).format(value);
   function ohms(value){return value>=1e6?`${formatted(value/1e6,2)} MΩ`:value>=1000?`${formatted(value/1000,2)} kΩ`:`${formatted(value,value<10?2:1)} Ω`;}
   function clear(){for(const id of ['resistance','idealResistance','actualCurrent','resistorPower','ledPower','runtime'])$(id).textContent='—';}
