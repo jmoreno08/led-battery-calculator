@@ -2,7 +2,7 @@
 
 Aplicación estática bilingüe (español e inglés). Calcula una resistencia E24 para limitar la corriente al voltaje máximo del pack y estima la duración a tensión nominal con el porcentaje de capacidad aprovechable indicado por el usuario.
 
-Interfaz clara y compacta con dos paneles: LED y resistencia, y batería y autonomía. En móviles se apilan en una columna.
+Interfaz clara con dos tarjetas horizontales apiladas: LED y resistencia arriba, batería y autonomía debajo. En escritorio amplio los campos y resultados se distribuyen en filas; la configuración inicial cabe en 1366 × 768 con los detalles cerrados. En móvil los controles se adaptan a una columna. Las explicaciones se consultan en secciones desplegables.
 
 Incluye selector **ES / EN**. Cambia todos los textos y mensajes sin perder los valores introducidos y recuerda el idioma en el navegador.
 

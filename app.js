@@ -1,4 +1,6 @@
 const STATIC_TEXT = {
+  "calculationNotes": "Calculation details",
+  "estimateNotes": "About this estimate",
   "mixed": "Parallel strings",
   "ledsPerString": "Series LEDs per string",
   "stringHint": "Total LEDs must be a multiple of the number per string. All strings use the same LED type.",
