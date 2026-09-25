@@ -6,6 +6,8 @@ Interfaz clara y compacta con dos paneles: LED y resistencia, y batería y auton
 
 Incluye selector **ES / EN**. Cambia todos los textos y mensajes sin perder los valores introducidos y recuerda el idioma en el navegador.
 
+Inicia en inglés si no existe una preferencia guardada. El selector LED muestra colores. Las opciones avanzadas de batería agrupan tensión nominal, tensión máxima y capacidad aprovechable.
+
 ## Abrir localmente
 
 Abre `index.html` en un navegador moderno. No requiere instalación ni compilación. Utiliza fuentes del sistema y funciona sin conexión.
@@ -20,6 +22,11 @@ Abre `index.html` en un navegador moderno. No requiere instalación ni compilaci
 Los enlaces usan rutas relativas (`./`), por lo que funcionan bajo un subdirectorio de Pages. También puedes subir toda esta carpeta a la raíz de un repositorio nuevo.
 
 ## Modelo y límites
+
+- Resistencia y autonomía se validan por separado: una capacidad o un horario incompleto no borra una resistencia válida. Sin margen a tensión nominal se conserva la resistencia dimensionada a máxima tensión y se omite la autonomía.
+- La conexión mixta permite cadenas iguales en paralelo. El total de LEDs debe ser divisible por los LEDs por cadena; cada cadena lleva una resistencia. Solo se modela un tipo de LED por configuración.
+- Los resultados incluyen cantidad de resistencias, corriente por LED a tensión nominal y máxima, y potencia comercial por resistencia. La potencia recomendada es el primer valor disponible en la lista interna con al menos el doble de la disipación calculada; es un margen de diseño, no sustituye las curvas de reducción por temperatura del fabricante. Por encima de la lista se solicita consultar al fabricante.
+- Los perfiles de batería siguen siendo ejemplos genéricos. La autonomía básica no integra curvas de descarga ni predice el tiempo hasta un brillo mínimo.
 
 - El panel LED muestra el voltaje de la fuente. «Usar batería» lo sincroniza con la tensión máxima del pack; «Fuente externa» permite introducir un voltaje fijo independiente y calcula la resistencia con ese valor. En este modo no se estima autonomía, porque no se modela la conexión entre batería y fuente externa.
 

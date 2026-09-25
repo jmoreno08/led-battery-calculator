@@ -51,3 +51,10 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
   h1 { font-size: 26px; }
   .fields, .result-grid { grid-template-columns: 1fr; }
 }
+
+[hidden] { display: none !important; }
+.advanced { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; }
+.advanced summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent); }
+.advanced[open] summary { margin-bottom: 12px; }
+.advanced summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+input[readonly] { background: var(--panel); }

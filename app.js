@@ -1,4 +1,12 @@
 const STATIC_TEXT = {
+  "mixed": "Parallel strings",
+  "ledsPerString": "Series LEDs per string",
+  "stringHint": "Total LEDs must be a multiple of the number per string. All strings use the same LED type.",
+  "advanced": "Advanced options",
+  "recommendedPower": "Recommended rating per resistor",
+  "resistorCount": "Resistors required",
+  "branchCurrent": "Current per LED · nominal / max.",
+  "ratingNote": "Power rating uses a 2× margin over calculated dissipation. Check the resistor datasheet for temperature derating.",
   "sourceMode": "Power source",
   "sourceBattery": "Use battery",
   "sourceExternal": "External supply",
@@ -114,48 +122,58 @@ function nextE24(value){
   return null;
 }
 function calculate(x){
-  const n=x.ledCount,b=x.batteryCount;
+  const positive=v=>Number.isFinite(v)&&v>0;
   const external=x.sourceMode==='external';
-  if(external && (!Number.isFinite(x.sourceVoltage)||x.sourceVoltage<=0))return {error:'invalid'};
-  if(![x.vf,x.targetCurrent,x.batteryNominal,x.batteryMax,x.capacity,x.hoursPerDay,x.usablePercent].every(Number.isFinite)
-    || x.vf<=0||x.targetCurrent<=0||x.batteryNominal<=0||x.batteryMax<x.batteryNominal||x.capacity<=0
-    || !Number.isInteger(n)||n<1||n>1000||!Number.isInteger(b)||b<1||b>100
-    || x.hoursPerDay<=0||x.hoursPerDay>24||x.usablePercent<=0||x.usablePercent>100
-    || !['parallel','series'].includes(x.ledConnection)||!['parallel','series'].includes(x.batteryConnection)){
-    return {error:'invalid'};
-  }
-  const packNominal=x.batteryNominal*(x.batteryConnection==='series'?b:1);
-  const packMax=x.batteryMax*(x.batteryConnection==='series'?b:1);
-  const packCapacity=x.capacity*(x.batteryConnection==='parallel'?b:1);
-  const ledDrop=x.vf*(x.ledConnection==='series'?n:1);
+  const n=x.ledCount,b=x.batteryCount;
+  if(!positive(x.vf)||!positive(x.targetCurrent)||!Number.isInteger(n)||n<1||n>1000
+    || !['parallel','series','mixed'].includes(x.ledConnection))return {error:'invalid'};
+  const validPack=positive(x.batteryNominal)&&positive(x.batteryMax)&&x.batteryMax>=x.batteryNominal
+    &&Number.isInteger(b)&&b>=1&&b<=100&&['parallel','series'].includes(x.batteryConnection);
+  if(!external&&!validPack)return {error:'invalid'};
+  if(external&&!positive(x.sourceVoltage))return {error:'invalid'};
+  const packNominal=validPack?x.batteryNominal*(x.batteryConnection==='series'?b:1):null;
+  const packMax=validPack?x.batteryMax*(x.batteryConnection==='series'?b:1):null;
+  const packCapacity=validPack&&positive(x.capacity)?x.capacity*(x.batteryConnection==='parallel'?b:1):null;
+  const seriesCount=x.ledConnection==='mixed'?x.ledsPerString:x.ledConnection==='series'?n:1;
+  if(!Number.isInteger(seriesCount)||seriesCount<1||seriesCount>n||n%seriesCount!==0)return {error:'invalidStrings'};
+  const ledDrop=x.vf*seriesCount;
   const supplyMax=external?x.sourceVoltage:packMax;
   const supplyNominal=external?x.sourceVoltage:packNominal;
   const common={packNominal,packMax,packCapacity,ledDrop,supplyMax,supplyNominal,external};
-  if(supplyMax<=ledDrop) return {...common,error:'insufficient'};
-  if(supplyNominal<=ledDrop) return {...common,error:'noMargin'};
+  if(supplyMax<=ledDrop)return {...common,error:'insufficient'};
   const idealResistance=(supplyMax-ledDrop)/(x.targetCurrent/1000);
   const resistance=nextE24(idealResistance);
   if(!resistance)return {...common,error:'noE24'};
-  const branchCount=x.ledConnection==='parallel'?n:1;
-  const nominalBranchCurrent=(supplyNominal-ledDrop)/resistance*1000;
+  const branchCount=n/seriesCount;
+  const nominalBranchCurrent=Math.max(0,supplyNominal-ledDrop)/resistance*1000;
   const maxBranchCurrent=(supplyMax-ledDrop)/resistance*1000;
   const totalCurrent=nominalBranchCurrent*branchCount;
   const maxResistorPower=(maxBranchCurrent/1000)**2*resistance;
-  const usableCapacity=packCapacity*x.usablePercent/100;
-  const runtimeHours=external?null:usableCapacity/totalCurrent;
-  return {...common,idealResistance,resistance,nominalBranchCurrent,maxBranchCurrent,totalCurrent,
-    maxResistorPower,ledPower:x.vf*n*nominalBranchCurrent/1000,usableCapacity,runtimeHours,
-    runtimeDays:external?null:runtimeHours/x.hoursPerDay,branchCount,perCellCurrent:external?null:totalCurrent/(x.batteryConnection==='parallel'?b:1)};
+  // Choose a standard rating with at least 2x dissipation headroom.
+  const recommendedPower=[0.125,0.25,0.5,1,2,3,5,10,20,25,50,100].find(w=>w>=2*maxResistorPower)??null;
+  const validCapacity=packCapacity!==null&&positive(x.usablePercent)&&x.usablePercent<=100;
+  const usableCapacity=validCapacity?packCapacity*x.usablePercent/100:null;
+  const warning=!external&&totalCurrent===0?'noMargin':null;
+  const runtimeIssue=external?'externalRuntime':warning??(!validCapacity?'invalidCapacity':null);
+  const runtimeHours=runtimeIssue?null:usableCapacity/totalCurrent;
+  const validHours=positive(x.hoursPerDay)&&x.hoursPerDay<=24;
+  const runtimeDays=runtimeHours!==null&&validHours?runtimeHours/x.hoursPerDay:null;
+  return {...common,idealResistance,resistance,branchCount,nominalBranchCurrent,maxBranchCurrent,totalCurrent,
+    maxResistorPower,recommendedPower,ledPower:x.vf*n*nominalBranchCurrent/1000,usableCapacity,
+    runtimeHours,runtimeDays,runtimeIssue,warning,perCellCurrent:external?null:totalCurrent/(x.batteryConnection==='parallel'?b:1)};
 }
 if(typeof module!=='undefined') module.exports={calculate,nextE24};
 
 if(typeof document!=='undefined'){
   const $=id=>document.getElementById(id);
-  const ids=['vf','targetCurrent','ledCount','ledConnection','batteryNominal','batteryMax','capacity','batteryCount','batteryConnection','hoursPerDay','usablePercent'];
+  const ids=['ledsPerString','vf','targetCurrent','ledCount','ledConnection','batteryNominal','batteryMax','capacity','batteryCount','batteryConnection','hoursPerDay','usablePercent'];
   const staticNodes=[...document.querySelectorAll('[data-i18n]')];
   for(const node of staticNodes)node.dataset.es=node.textContent;
   const MESSAGES={
     es:{title:'Calculadora LED + Batería',description:'Diseña circuitos LED con resistencia, baterías y autonomía aproximada.',
+      invalidCapacity:'Revisa la capacidad de la batería y el porcentaje aprovechable. La resistencia sigue siendo válida.',
+      invalidHours:'Introduce horas de uso entre 0 y 24, mayores que cero, para estimar días.',
+      ratingCustom:'Consultar fabricante',
       sourceBatteryHint:'Se usa la tensión máxima del pack para dimensionar la resistencia. Se actualiza al cambiar la batería.',
       sourceExternalHint:'Introduce el voltaje de la fuente que alimenta los LEDs directamente.',
       externalRuntime:'La autonomía no se estima con una fuente externa. Selecciona «Usar batería» para calcularla.',
@@ -164,6 +182,7 @@ if(typeof document!=='undefined'){
       insufficient:'El voltaje de la fuente no supera la suma de Vf. Necesitas otra configuración o un convertidor.',
       noMargin:'El circuito podría encender recién cargado, pero a tensión nominal no queda margen para la resistencia. No se estima autonomía.',
       noE24:'No se encontró un valor E24 para esta resistencia.',
+      mixed:'Una resistencia por cadena',invalidStrings:'La cantidad total de LEDs debe ser múltiplo de los LEDs por cadena.',
       parallel:'Una resistencia por LED',series:'Una resistencia para toda la cadena',
       noRuntime:'No hay estimación válida para esta conexión.',
       check:'Comprueba los datos y asegúrate de que la batería entregue más tensión que los LEDs.',
@@ -174,6 +193,9 @@ if(typeof document!=='undefined'){
       margin:'El margen de tensión nominal es inferior a 0,3 V. La corriente y el brillo caerán pronto al descargarse la batería; esta autonomía puede sobrestimar mucho la duración útil.',
       explain:(max,nom,current,capacity)=>`Se dimensiona con ${max} V (pack al máximo). A ${nom} V, cada rama conduce ≈ ${current} mA; la autonomía divide ${capacity} mAh aprovechables entre la corriente total. Al caer la tensión, también cae la luz.`},
     en:{title:'LED + Battery Calculator',description:'Design LED circuits with resistors, batteries, and approximate runtime.',
+      invalidCapacity:'Check battery capacity and usable percentage. The resistor calculation remains valid.',
+      invalidHours:'Enter daily use greater than 0 and up to 24 hours to estimate days.',
+      ratingCustom:'Check manufacturer',
       sourceBatteryHint:'Maximum pack voltage is used to size the resistor. It updates when you change the battery.',
       sourceExternalHint:'Enter the voltage of the supply directly powering the LEDs.',
       externalRuntime:'Battery runtime is not estimated with an external supply. Select “Use battery” to calculate it.',
@@ -182,6 +204,7 @@ if(typeof document!=='undefined'){
       insufficient:'The supply voltage does not exceed the combined LED forward voltage. Choose another setup or use a converter.',
       noMargin:'The LEDs may turn on with a fresh battery, but there is no resistor headroom at nominal voltage. Runtime cannot be estimated.',
       noE24:'No E24 resistor value was found for this configuration.',
+      mixed:'One resistor per string',invalidStrings:'Total LED count must be a multiple of LEDs per string.',
       parallel:'One resistor per LED',series:'One resistor for the whole string',
       noRuntime:'No valid runtime estimate for this configuration.',
       check:'Check the inputs and make sure battery voltage exceeds the combined LED forward voltage.',
@@ -196,7 +219,7 @@ if(typeof document!=='undefined'){
   try{if(localStorage.getItem('lumina-language')==='es')lang='es';}catch{}
   const formatted=(value,max=1)=>new Intl.NumberFormat(lang==='en'?'en-US':'es-CO',{maximumFractionDigits:max}).format(value);
   function ohms(value){return value>=1e6?`${formatted(value/1e6,2)} MΩ`:value>=1000?`${formatted(value/1000,2)} kΩ`:`${formatted(value,value<10?2:1)} Ω`;}
-  function clear(){for(const id of ['resistance','idealResistance','actualCurrent','resistorPower','ledPower','runtime'])$(id).textContent='—';}
+  function clear(){for(const id of ['resistance','idealResistance','actualCurrent','resistorPower','ledPower','runtime','recommendedPower','resistorCount','branchCurrent'])$(id).textContent='—';}
   function translate(){
     document.documentElement.lang=lang;
     document.title=MESSAGES[lang].title;
@@ -227,6 +250,7 @@ if(typeof document!=='undefined'){
   }
   function update(){
     const x=Object.fromEntries(ids.map(id=>[id,['ledConnection','batteryConnection'].includes(id)?$(id).value:Number($(id).value)]));
+    $('stringField').hidden=x.ledConnection!=='mixed';
     x.sourceMode=$('sourceMode').value;
     const external=x.sourceMode==='external';
     $('sourceVoltage').readOnly=!external;
@@ -244,17 +268,21 @@ if(typeof document!=='undefined'){
     $('actualCurrent').textContent=`${formatted(r.totalCurrent,2)} mA`;
     $('resistorPower').textContent=r.maxResistorPower<1?`${formatted(r.maxResistorPower*1000,2)} mW`:`${formatted(r.maxResistorPower,2)} W`;
     $('ledPower').textContent=`${formatted(r.ledPower*1000,2)} mW`;
-    $('runtime').textContent=external?'—':`${formatted(r.runtimeHours,1)} h`;
-    $('runtimeDays').textContent=external?MESSAGES[lang].externalRuntime:MESSAGES[lang].days(formatted(r.runtimeDays,1),formatted(x.hoursPerDay,1));
+    $('recommendedPower').textContent=r.recommendedPower?`${formatted(r.recommendedPower,3)} W`:MESSAGES[lang].ratingCustom;
+    $('resistorCount').textContent=formatted(r.branchCount,0);
+    $('branchCurrent').textContent=`${formatted(r.nominalBranchCurrent,2)} / ${formatted(r.maxBranchCurrent,2)} mA`;
+    $('runtime').textContent=r.runtimeHours===null?'—':`${formatted(r.runtimeHours,1)} h`;
+    $('runtimeDays').textContent=r.runtimeIssue?MESSAGES[lang][r.runtimeIssue]:r.runtimeDays===null?MESSAGES[lang].invalidHours:MESSAGES[lang].days(formatted(r.runtimeDays,1),formatted(x.hoursPerDay,1));
     const coin=BATTERIES[type]?.coin;
-    if(!external && coin && r.perCellCurrent>=2){
+    if(r.warning){status.textContent=MESSAGES[lang][r.warning];status.className='status show';
+    }else if(!external && coin && r.perCellCurrent>=2){
       status.textContent=MESSAGES[lang].coin(formatted(r.perCellCurrent,1));
       status.className='status show';
     }else if(!external && r.packNominal-r.ledDrop<0.3){
       status.textContent=MESSAGES[lang].margin;
       status.className='status show';
     }else{status.textContent='';status.className='status';}
-    $('explanation').textContent=external?MESSAGES[lang].externalExplain(formatted(r.supplyMax,2),formatted(r.nominalBranchCurrent,2)):MESSAGES[lang].explain(formatted(r.packMax,2),formatted(r.packNominal,2),formatted(r.nominalBranchCurrent,2),formatted(r.usableCapacity,0));
+    $('explanation').textContent=r.runtimeIssue&&!external?MESSAGES[lang][r.runtimeIssue]:external?MESSAGES[lang].externalExplain(formatted(r.supplyMax,2),formatted(r.nominalBranchCurrent,2)):MESSAGES[lang].explain(formatted(r.packMax,2),formatted(r.packNominal,2),formatted(r.nominalBranchCurrent,2),formatted(r.usableCapacity,0));
   }
   ids.forEach(id=>$(id).addEventListener('input',update));
   $('sourceMode').addEventListener('change',update);
